@@ -1,6 +1,7 @@
 package com.example.fb_ali_pay;
 
 import androidx.annotation.NonNull;
+import io.flutter.app.FlutterApplication;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.shim.ShimPluginRegistry;
 import io.flutter.plugin.common.MethodCall;
@@ -33,7 +34,7 @@ public class FbAliPayPlugin implements FlutterPlugin, MethodCallHandler {
 
   private MethodChannel.Result result;
 
-  private Activity activity;
+  private FlutterPluginBinding flutterPluginBinding;
 
   @SuppressLint("HandlerLeak")
   private Handler mHandler = new Handler() {
@@ -86,9 +87,7 @@ public class FbAliPayPlugin implements FlutterPlugin, MethodCallHandler {
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
     channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "fb_ali_pay");
     channel.setMethodCallHandler(this);
-    ShimPluginRegistry t = new ShimPluginRegistry(flutterPluginBinding.getFlutterEngine());
-    Registrar  registrar = t.registrarFor("com.example.fb_all_pay");
-    activity = registrar.activity();
+    this.flutterPluginBinding = flutterPluginBinding;
   }
 
   @Override
@@ -101,7 +100,8 @@ public class FbAliPayPlugin implements FlutterPlugin, MethodCallHandler {
       Runnable authRunnable = new Runnable() {
         @Override
         public void run() {
-          AuthTask authTask = new AuthTask(activity);
+          FlutterApplication application = (FlutterApplication) flutterPluginBinding.getApplicationContext();
+          AuthTask authTask = new AuthTask(application.getCurrentActivity());
           // 调用授权接口，获取授权结果
           Map<String, String> result = authTask.authV2(info, true);
           Message msg = new Message();
@@ -121,7 +121,8 @@ public class FbAliPayPlugin implements FlutterPlugin, MethodCallHandler {
 
         @Override
         public void run() {
-          PayTask alipay = new PayTask(activity);
+          FlutterApplication application = (FlutterApplication) flutterPluginBinding.getApplicationContext();
+          PayTask alipay = new PayTask(application.getCurrentActivity());
           Map<String, String> result = alipay.payV2(info, true);
           Message msg = new Message();
           msg.what = SDK_PAY_FLAG;
