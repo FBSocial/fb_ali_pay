@@ -10,6 +10,9 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
 import com.alipay.sdk.app.AuthTask;
+import java.lang.ref.WeakReference;
+import io.flutter.embedding.engine.plugins.activity.ActivityAware;
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
 
 import android.app.Activity;
 import android.os.Handler;
@@ -22,7 +25,7 @@ import java.util.Map;
 
 
 /** FbAliPayPlugin */
-public class FbAliPayPlugin implements FlutterPlugin, MethodCallHandler {
+public class FbAliPayPlugin implements FlutterPlugin, ActivityAware,MethodCallHandler {
   /// The MethodChannel that will the communication between Flutter and native Android
   ///
   /// This local reference serves to register the plugin with the Flutter Engine and unregister it
@@ -34,7 +37,7 @@ public class FbAliPayPlugin implements FlutterPlugin, MethodCallHandler {
 
   private MethodChannel.Result result;
 
-  private FlutterPluginBinding flutterPluginBinding;
+  private Activity activity;
 
   @SuppressLint("HandlerLeak")
   private Handler mHandler = new Handler() {
@@ -82,12 +85,32 @@ public class FbAliPayPlugin implements FlutterPlugin, MethodCallHandler {
     };
   };
 
+  // --- ActivityAware
+
+  @Override
+  public void onAttachedToActivity(@NonNull ActivityPluginBinding binding) {
+    activity = binding.getActivity();
+  }
+
+  @Override
+  public void onDetachedFromActivityForConfigChanges() {
+    onDetachedFromActivity();
+  }
+
+  @Override
+  public void onReattachedToActivityForConfigChanges(@NonNull ActivityPluginBinding binding) {
+    onAttachedToActivity(binding);
+  }
+
+  @Override
+  public void onDetachedFromActivity() {
+    activity = null;
+  }
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
     channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "fb_ali_pay");
     channel.setMethodCallHandler(this);
-    this.flutterPluginBinding = flutterPluginBinding;
   }
 
   @Override
@@ -100,8 +123,8 @@ public class FbAliPayPlugin implements FlutterPlugin, MethodCallHandler {
       Runnable authRunnable = new Runnable() {
         @Override
         public void run() {
-          FlutterApplication application = (FlutterApplication) flutterPluginBinding.getApplicationContext();
-          AuthTask authTask = new AuthTask(application.getCurrentActivity());
+//          FlutterApplication application = (FlutterApplication) flutterPluginBinding.getApplicationContext();
+          AuthTask authTask = new AuthTask(activity);
           // 调用授权接口，获取授权结果
           Map<String, String> result = authTask.authV2(info, true);
           Message msg = new Message();
@@ -121,8 +144,7 @@ public class FbAliPayPlugin implements FlutterPlugin, MethodCallHandler {
 
         @Override
         public void run() {
-          FlutterApplication application = (FlutterApplication) flutterPluginBinding.getApplicationContext();
-          PayTask alipay = new PayTask(application.getCurrentActivity());
+          PayTask alipay = new PayTask(activity);
           Map<String, String> result = alipay.payV2(info, true);
           Message msg = new Message();
           msg.what = SDK_PAY_FLAG;
