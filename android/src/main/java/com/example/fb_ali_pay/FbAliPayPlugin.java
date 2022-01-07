@@ -1,6 +1,7 @@
 package com.example.fb_ali_pay;
 
 import androidx.annotation.NonNull;
+import io.flutter.app.FlutterApplication;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.shim.ShimPluginRegistry;
 import io.flutter.plugin.common.MethodCall;
@@ -9,6 +10,9 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
 import com.alipay.sdk.app.AuthTask;
+import java.lang.ref.WeakReference;
+import io.flutter.embedding.engine.plugins.activity.ActivityAware;
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
 
 import android.app.Activity;
 import android.os.Handler;
@@ -21,7 +25,7 @@ import java.util.Map;
 
 
 /** FbAliPayPlugin */
-public class FbAliPayPlugin implements FlutterPlugin, MethodCallHandler {
+public class FbAliPayPlugin implements FlutterPlugin, ActivityAware,MethodCallHandler {
   /// The MethodChannel that will the communication between Flutter and native Android
   ///
   /// This local reference serves to register the plugin with the Flutter Engine and unregister it
@@ -81,14 +85,32 @@ public class FbAliPayPlugin implements FlutterPlugin, MethodCallHandler {
     };
   };
 
+  // --- ActivityAware
+
+  @Override
+  public void onAttachedToActivity(@NonNull ActivityPluginBinding binding) {
+    activity = binding.getActivity();
+  }
+
+  @Override
+  public void onDetachedFromActivityForConfigChanges() {
+    onDetachedFromActivity();
+  }
+
+  @Override
+  public void onReattachedToActivityForConfigChanges(@NonNull ActivityPluginBinding binding) {
+    onAttachedToActivity(binding);
+  }
+
+  @Override
+  public void onDetachedFromActivity() {
+    activity = null;
+  }
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
     channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "fb_ali_pay");
     channel.setMethodCallHandler(this);
-    ShimPluginRegistry t = new ShimPluginRegistry(flutterPluginBinding.getFlutterEngine());
-    Registrar  registrar = t.registrarFor("com.example.fb_all_pay");
-    activity = registrar.activity();
   }
 
   @Override
@@ -101,6 +123,7 @@ public class FbAliPayPlugin implements FlutterPlugin, MethodCallHandler {
       Runnable authRunnable = new Runnable() {
         @Override
         public void run() {
+//          FlutterApplication application = (FlutterApplication) flutterPluginBinding.getApplicationContext();
           AuthTask authTask = new AuthTask(activity);
           // 调用授权接口，获取授权结果
           Map<String, String> result = authTask.authV2(info, true);
