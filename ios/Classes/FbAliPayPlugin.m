@@ -9,6 +9,7 @@
       methodChannelWithName:@"fb_ali_pay"
             binaryMessenger:[registrar messenger]];
   FbAliPayPlugin* instance = [[FbAliPayPlugin alloc] init];
+  [registrar addApplicationDelegate:instance];
   [registrar addMethodCallDelegate:instance channel:channel];
 }
 
