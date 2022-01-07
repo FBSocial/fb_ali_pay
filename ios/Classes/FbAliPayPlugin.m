@@ -13,9 +13,11 @@
 }
 
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
-  if ([@"getPlatformVersion" isEqualToString:call.method]) {
-    result([@"iOS " stringByAppendingString:[[UIDevice currentDevice] systemVersion]]);
-  } else if ([@"aliPayAuth" isEqualToString:call.method]) {
+    if ([@"isInstalledAliPay" isEqualToString:call.method]) {
+        BOOL isInstalled = [[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"alipay:"]];
+        result([NSNumber numberWithBool:isInstalled]);
+        
+    } else if ([@"aliPayAuth" isEqualToString:call.method]) {
       NSString * infoStr = [call.arguments valueForKey:@"info"];
       [AliPayTool getUserCode:infoStr block:^(NSString * _Nonnull code) {
           result(code);
