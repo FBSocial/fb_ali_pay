@@ -15,7 +15,7 @@
 
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
     if ([@"isInstalledAliPay" isEqualToString:call.method]) {
-        BOOL isInstalled = [[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"alipay:"]];
+        BOOL isInstalled = [[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"alipay://"]];
         result([NSNumber numberWithBool:isInstalled]);
         
     } else if ([@"aliPayAuth" isEqualToString:call.method]) {
