@@ -11,14 +11,14 @@ class FbAliPay {
   static const MethodChannel _channel = const MethodChannel('fb_ali_pay');
 
   ///是否安装支付宝
-  static Future<bool> isInstalledAliPay() async {
-     bool isInstalled = await _channel.invokeMethod("isInstalledAliPay");
+  static Future<bool?> isInstalledAliPay() async {
+     bool? isInstalled = await _channel.invokeMethod("isInstalledAliPay");
     return isInstalled;
   }
 
   ///向支付宝请求授权
-  static Future<String> aliPayAuth(String serviceCode) async {
-    final String code =
+  static Future<String?> aliPayAuth(String serviceCode) async {
+    final String? code =
         await _channel.invokeMethod("aliPayAuth", <String, String>{
       'info': serviceCode,
     });
