@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:fb_ali_pay/fb_ali_pay.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 void main() {
   runApp(MyApp());
@@ -28,12 +27,6 @@ class _MyAppState extends State<MyApp> {
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {
     String platformVersion;
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    try {
-      platformVersion = await FbAliPay.platformVersion;
-    } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
-    }
 
     // If the widget was removed from the tree while the asynchronous platform
     // message was in flight, we want to discard the reply rather than calling
@@ -54,6 +47,10 @@ class _MyAppState extends State<MyApp> {
           ),
           body: Column(
             children: [
+              createButton("检查是否有安装支付宝", () async {
+                bool success = await FbAliPay.isInstalledAliPay();
+                print("是否有安装? ${success ? "是" : "否"}");
+              }),
               createButton("支付宝授权", () async {
                 String code =
                     await FbAliPay.aliPayAuth(serviceCode).catchError((e) {

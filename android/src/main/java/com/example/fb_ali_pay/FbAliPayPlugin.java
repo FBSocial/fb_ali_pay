@@ -3,11 +3,14 @@ package com.example.fb_ali_pay;
 import androidx.annotation.NonNull;
 import io.flutter.app.FlutterApplication;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import io.flutter.embedding.engine.plugins.shim.ShimPluginRegistry;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
+import android.content.Context;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
 import com.alipay.sdk.app.AuthTask;
 import java.lang.ref.WeakReference;
@@ -38,6 +41,8 @@ public class FbAliPayPlugin implements FlutterPlugin, ActivityAware,MethodCallHa
   private MethodChannel.Result result;
 
   private Activity activity;
+
+  private Context applicationContext;
 
   @SuppressLint("HandlerLeak")
   private Handler mHandler = new Handler() {
@@ -111,6 +116,7 @@ public class FbAliPayPlugin implements FlutterPlugin, ActivityAware,MethodCallHa
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
     channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "fb_ali_pay");
     channel.setMethodCallHandler(this);
+    applicationContext = flutterPluginBinding.getApplicationContext();
   }
 
   @Override
@@ -123,7 +129,6 @@ public class FbAliPayPlugin implements FlutterPlugin, ActivityAware,MethodCallHa
       Runnable authRunnable = new Runnable() {
         @Override
         public void run() {
-//          FlutterApplication application = (FlutterApplication) flutterPluginBinding.getApplicationContext();
           AuthTask authTask = new AuthTask(activity);
           // 调用授权接口，获取授权结果
           Map<String, String> result = authTask.authV2(info, true);
@@ -138,6 +143,15 @@ public class FbAliPayPlugin implements FlutterPlugin, ActivityAware,MethodCallHa
       Thread authThread = new Thread(authRunnable);
       authThread.start();
 
+    } else if (call.method.equals("isInstalledAliPay")) {
+      boolean isInstalled = false;
+      try {
+        final PackageManager packageManager = applicationContext.getPackageManager();
+        PackageInfo info = packageManager.getPackageInfo("com.eg.android.AlipayGphone", PackageManager.GET_SIGNATURES);
+        isInstalled = info != null;
+      } catch (PackageManager.NameNotFoundException ignore) {
+      }
+      result.success(isInstalled);
     } else if ( call.method.equals("aliPaySendRedPacket")) {
       final String info = call.argument("info");
       final Runnable payRunnable = new Runnable() {

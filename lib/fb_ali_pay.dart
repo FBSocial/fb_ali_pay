@@ -10,11 +10,13 @@ import 'package:flutter/services.dart';
 class FbAliPay {
   static const MethodChannel _channel = const MethodChannel('fb_ali_pay');
 
-  static Future<String> get platformVersion async {
-    final String version = await _channel.invokeMethod('getPlatformVersion');
-    return version;
+  ///是否安装支付宝
+  static Future<bool> isInstalledAliPay() async {
+     bool isInstalled = await _channel.invokeMethod("isInstalledAliPay");
+    return isInstalled;
   }
 
+  ///向支付宝请求授权
   static Future<String> aliPayAuth(String serviceCode) async {
     final String code =
         await _channel.invokeMethod("aliPayAuth", <String, String>{
@@ -23,6 +25,7 @@ class FbAliPay {
     return code;
   }
 
+  ///支付宝付款订单、红包
   static Future<bool> aliPaySendRedPacket(String serviceCode) async {
     final Map value =
         await _channel.invokeMethod("aliPaySendRedPacket", <String, String>{

@@ -9,13 +9,19 @@
       methodChannelWithName:@"fb_ali_pay"
             binaryMessenger:[registrar messenger]];
   FbAliPayPlugin* instance = [[FbAliPayPlugin alloc] init];
+  [registrar addApplicationDelegate:instance];
   [registrar addMethodCallDelegate:instance channel:channel];
 }
 
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
-  if ([@"getPlatformVersion" isEqualToString:call.method]) {
-    result([@"iOS " stringByAppendingString:[[UIDevice currentDevice] systemVersion]]);
-  } else if ([@"aliPayAuth" isEqualToString:call.method]) {
+    if ([@"isInstalledAliPay" isEqualToString:call.method]) {
+        BOOL isInstalled = [[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"alipay://"]];
+        if (!isInstalled) {
+            isInstalled = [[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"alipays:"]];
+        }
+        result([NSNumber numberWithBool:isInstalled]);
+        
+    } else if ([@"aliPayAuth" isEqualToString:call.method]) {
       NSString * infoStr = [call.arguments valueForKey:@"info"];
       [AliPayTool getUserCode:infoStr block:^(NSString * _Nonnull code) {
           result(code);
@@ -35,9 +41,7 @@
 -(BOOL)handleOpenURL:(NSURL*)url{
     if ([url.host isEqualToString:@"safepay"]) {
         // 支付跳转支付宝钱包进行支付，处理支付结果
-        [[AlipaySDK defaultService] processOrderWithPaymentResult:url standbyCallback:^(NSDictionary *resultDic) {
-            NSLog(@"result = %@",resultDic);
-        }];
+        [[AlipaySDK defaultService] processOrderWithPaymentResult:url standbyCallback:nil];
         
         // 授权跳转支付宝钱包进行支付，处理支付结果
         [[AlipaySDK defaultService] processAuth_V2Result:url standbyCallback:^(NSDictionary *resultDic) {
