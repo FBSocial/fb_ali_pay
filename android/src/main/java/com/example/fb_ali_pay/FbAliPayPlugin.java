@@ -49,10 +49,12 @@ public class FbAliPayPlugin implements FlutterPlugin, ActivityAware, MethodCallH
     private static final String METHOD_ALI_PAY_INSTALLED = "isInstalledAliPay";
     private static final String METHOD_SEND_RED_PACKET = "aliPaySendRedPacket";
 
+    private static final String OPTIONS_TIME_OUT = "last option time out";
+
     private static final int SDK_PAY_FLAG = 1;
     private static final int SDK_AUTH_FLAG = 2;
 
-    private MethodChannel.Result result;
+    private MethodChannel.Result mCurrentResult;
 
     private Activity activity;
 
@@ -70,12 +72,16 @@ public class FbAliPayPlugin implements FlutterPlugin, ActivityAware, MethodCallH
                      */
                     String resultInfo = payResult.getResult();// 同步返回需要验证的信息
                     String resultStatus = payResult.getResultStatus();
+                    if (mCurrentResult == null) {
+                        Log.e(TAG, "alipay plugin result is empty");
+                        return;
+                    }
                     // 判断resultStatus 为9000则代表支付成功
                     if (TextUtils.equals(resultStatus, "9000")) {
-                        result.success(msg.obj);
+                        mCurrentResult.success(msg.obj);
                     } else {
-                        result.success(msg.obj);
-                        System.out.println("支付失败");
+                        mCurrentResult.success(msg.obj);
+//                        System.out.println("支付失败");
                     }
                     break;
                 }
@@ -84,26 +90,29 @@ public class FbAliPayPlugin implements FlutterPlugin, ActivityAware, MethodCallH
                     AuthResult authResult = new AuthResult((Map<String, String>) msg.obj, true);
                     String resultStatus = authResult.getResultStatus();
 
+                    if (mCurrentResult == null) {
+                        Log.e(TAG, "alipay plugin result is empty");
+                        return;
+                    }
                     // 判断resultStatus 为“9000”且result_code
                     // 为“200”则代表授权成功，具体状态码代表含义可参考授权接口文档
                     if (TextUtils.equals(resultStatus, "9000") && TextUtils.equals(authResult.getResultCode(), "200")) {
                         // 获取alipay_open_id，调支付时作为参数extern_token 的value
                         // 传入，则支付账户为该授权账户
-                        result.success(authResult.getAuthCode());
-                        System.out.println("授权成功");
+                        mCurrentResult.success(authResult.getAuthCode());
+//                        System.out.println("授权成功");
                     } else {
                         // 其他状态值则为授权失败
-                        result.success("");
-                        System.out.println("授权失败");
+                        mCurrentResult.success("");
+//                        System.out.println("授权失败");
                     }
                     break;
                 }
                 default:
                     break;
             }
+            mCurrentResult = null;
         }
-
-        ;
     };
 
     // --- ActivityAware
@@ -177,9 +186,27 @@ public class FbAliPayPlugin implements FlutterPlugin, ActivityAware, MethodCallH
         result.success("Android " + android.os.Build.VERSION.RELEASE);
     }
 
+    private void handleAliPayInstalled(MethodCall call, Result result) {
+//        Log.d(TAG, "handleAliPayInstalled: ");
+        boolean isInstalled = false;
+        try {
+            final PackageManager packageManager = applicationContext.getPackageManager();
+            PackageInfo info = packageManager.getPackageInfo("com.eg.android.AlipayGphone", PackageManager.GET_SIGNATURES);
+            isInstalled = info != null;
+        } catch (PackageManager.NameNotFoundException ignore) {
+        }
+        result.success(isInstalled);
+    }
+
     private void handleAliPayAuth(MethodCall call, Result result) {
+        if (mCurrentResult != null) {
+            mCurrentResult.error(OPTIONS_TIME_OUT, null, null);
+            mCurrentResult = null;
+            return;
+        }
+        mCurrentResult = result;
         final String info = call.argument("info");
-        Log.d(TAG, "handleAliPayAuth: ");
+//        Log.d(TAG, "handleAliPayAuth: ");
         Runnable authRunnable = new Runnable() {
             @Override
             public void run() {
@@ -192,26 +219,19 @@ public class FbAliPayPlugin implements FlutterPlugin, ActivityAware, MethodCallH
                 mHandler.sendMessage(msg);
             }
         };
-        this.result = result;
         // 异步调用
         Thread authThread = new Thread(authRunnable);
         authThread.start();
     }
 
-    private void handleAliPayInstalled(MethodCall call, Result result) {
-        Log.d(TAG, "handleAliPayInstalled: ");
-        boolean isInstalled = false;
-        try {
-            final PackageManager packageManager = applicationContext.getPackageManager();
-            PackageInfo info = packageManager.getPackageInfo("com.eg.android.AlipayGphone", PackageManager.GET_SIGNATURES);
-            isInstalled = info != null;
-        } catch (PackageManager.NameNotFoundException ignore) {
-        }
-        result.success(isInstalled);
-    }
-
     private void handleSendRedPacket(MethodCall call, Result result) {
-        Log.d(TAG, "handleSendRedPacket: ");
+        if (mCurrentResult != null) {
+            mCurrentResult.error(OPTIONS_TIME_OUT, null, null);
+            mCurrentResult = null;
+            return;
+        }
+        mCurrentResult = result;
+//        Log.d(TAG, "handleSendRedPacket: ");
         final String info = call.argument("info");
         final Runnable payRunnable = new Runnable() {
 
@@ -225,7 +245,6 @@ public class FbAliPayPlugin implements FlutterPlugin, ActivityAware, MethodCallH
                 mHandler.sendMessage(msg);
             }
         };
-        this.result = result;
         Thread payThread = new Thread(payRunnable);
         payThread.start();
     }
