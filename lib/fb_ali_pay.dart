@@ -37,4 +37,13 @@ class FbAliPay {
       return false;
     }
   }
+
+  /// 支付宝支付
+  static Future<String?> aliPay(String orderStr) async {
+    final String? code =
+    await _channel.invokeMethod("aliPay", <String, String>{
+      'info': orderStr,
+    });
+    return code;
+  }
 }

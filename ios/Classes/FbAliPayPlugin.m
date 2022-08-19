@@ -29,10 +29,18 @@
       
   } else if ([@"aliPaySendRedPacket" isEqualToString:call.method]) {
       NSString * infoStr = [call.arguments valueForKey:@"info"];
+      // 调用支付结果开始支付
       [AliPayTool senRedPacket:infoStr block:^(NSDictionary * _Nonnull code) {
           result(code);
       }];
       
+  } else if ([@"aliPay" isEqualToString:call.method]) {
+      NSString * orderStr = [call.arguments valueForKey:@"info"];
+       // 调用支付结果开始支付
+       [AliPayTool senRedPacket:orderStr block:^(NSDictionary * _Nonnull code) {
+              result(code);
+       }];
+
   } else {
     result(FlutterMethodNotImplemented);
   }
