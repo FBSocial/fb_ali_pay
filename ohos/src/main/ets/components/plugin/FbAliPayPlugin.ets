@@ -43,19 +43,28 @@ export default class FbAliPayPlugin implements FlutterPlugin, MethodCallHandler 
         result.success(false);
       }
     } else if (call.method == "aliPay") {
-      new Pay().payWithNav('orderInfo', true, undefined, new NavPathStack()).then((aliPayResult) => {
-        let message =
-          `resultStatus: ${aliPayResult.get('resultStatus')} memo: ${aliPayResult.get('memo')} result: ${aliPayResult.get('result')}`;
-        result.success(message);
-      }).catch((error: BusinessError) => {
-        result.success(error.message);
-      });
+      if (call.args instanceof Map) {
+        // 作为一个Map，我们可以使用get方法来获取"info"键的值
+        let code: string | undefined = call.args.get('info');
+        new Pay().payWithNav(code ?? "", true, undefined, new NavPathStack()).then((aliPayResult) => {
+          let message =
+            `resultStatus: ${aliPayResult.get('resultStatus')} memo: ${aliPayResult.get('memo')} result: ${aliPayResult.get('result')}`;
+          result.success(message);
+        }).catch((error: BusinessError) => {
+          result.success(error.message);
+        });
+      }
+
     } else if (call.method == "aliPaySendRedPacket") {
-      new Pay().payWithNav('orderInfo', true, undefined, new NavPathStack()).then((aliPayResult) => {
-        result.success(aliPayResult);
-      }).catch((error: BusinessError) => {
-        result.success({"code":"9001"});
-      });
+      if (call.args instanceof Map) {
+        // 作为一个Map，我们可以使用get方法来获取"info"键的值
+        let code: string | undefined = call.args.get('info');
+        new Pay().payWithNav(code ?? "", true, undefined, new NavPathStack()).then((aliPayResult) => {
+          result.success(aliPayResult);
+        }).catch((error: BusinessError) => {
+          result.success({"code":"9001"});
+        });
+      }
     } else {
       result.notImplemented()
     }
