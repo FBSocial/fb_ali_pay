@@ -8,5 +8,13 @@
   "dependencies": {
     "@ohos/flutter_ohos": "file:./har/flutter.har",
     "@cashier_alipay/cashiersdk": "15.8.25"
-  }
+  },
+  "metadata": {
+    "sourceRoots": [
+      "./src/main"
+    ]
+  },
+  "compatibleSdkVersion": 12,
+  "compatibleSdkType": "HarmonyOS",
+  "obfuscated": false
 }

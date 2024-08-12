@@ -7,6 +7,10 @@ import {
   MethodResult,
 } from '@ohos/flutter_ohos';
 
+import {Pay} from '@cashier_alipay/cashiersdk';
+import { BusinessError } from '@kit.BasicServicesKit';
+import { bundleManager } from '@kit.AbilityKit';
+
 /** FbAliPayPlugin **/
 export default class FbAliPayPlugin implements FlutterPlugin, MethodCallHandler {
   private channel: MethodChannel | null = null;
@@ -30,8 +34,28 @@ export default class FbAliPayPlugin implements FlutterPlugin, MethodCallHandler 
   }
 
   onMethodCall(call: MethodCall, result: MethodResult): void {
-    if (call.method == "getPlatformVersion") {
-      result.success("OpenHarmony ^ ^ ")
+    if (call.method == "isInstalledAliPay") {
+      try {
+        let link = 'alipays://test.example.com/home';
+        let canOpen = bundleManager.canOpenLink(link);
+        result.success(canOpen);
+      } catch (err) {
+        result.success(false);
+      }
+    } else if (call.method == "aliPay") {
+      new Pay().payWithNav('orderInfo', true, undefined, new NavPathStack()).then((aliPayResult) => {
+        let message =
+          `resultStatus: ${aliPayResult.get('resultStatus')} memo: ${aliPayResult.get('memo')} result: ${aliPayResult.get('result')}`;
+        result.success(message);
+      }).catch((error: BusinessError) => {
+        result.success(error.message);
+      });
+    } else if (call.method == "aliPaySendRedPacket") {
+      new Pay().payWithNav('orderInfo', true, undefined, new NavPathStack()).then((aliPayResult) => {
+        result.success(aliPayResult);
+      }).catch((error: BusinessError) => {
+        result.success({"code":"9001"});
+      });
     } else {
       result.notImplemented()
     }
