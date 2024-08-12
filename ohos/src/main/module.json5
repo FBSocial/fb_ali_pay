@@ -1,0 +1,10 @@
+{
+  "module": {
+    "name": "fb_ali_pay",
+    "type": "har",
+    "deviceTypes": [
+      "default",
+      "tablet"
+    ]
+  }
+}
