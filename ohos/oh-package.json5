@@ -7,7 +7,8 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@ohos/flutter_ohos": "file:./har/flutter.har",
-    "@cashier_alipay/cashiersdk": "15.8.25"
+    "@cashier_alipay/cashiersdk": "15.8.25",
+    "@alipay/afservicesdk": "file:./har/AFServiceSDK.har"
   },
   "metadata": {
     "sourceRoots": [

@@ -10,6 +10,14 @@ import {
 import {Pay} from '@cashier_alipay/cashiersdk';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { bundleManager } from '@kit.AbilityKit';
+import {
+  AFServiceParams,
+  AFWantParams,
+  AFServiceCenter,
+  AFAuthServiceResponse,
+  AFService,
+  AFAuthResCode
+} from '@alipay/afservicesdk';
 
 /** FbAliPayPlugin **/
 export default class FbAliPayPlugin implements FlutterPlugin, MethodCallHandler {
@@ -42,6 +50,26 @@ export default class FbAliPayPlugin implements FlutterPlugin, MethodCallHandler 
       } catch (err) {
         result.success(false);
       }
+    } else if (call.method == "aliPayAuth") {
+      if (call.args instanceof Map) {
+        // 作为一个Map，我们可以使用get方法来获取"info"键的值
+        let code: string | undefined = call.args.get('info');
+        let backWant: AFWantParams = {
+          bundleName: "com.idreamsky.buff", //接入方应用包名
+          moduleName: "entry",
+          abilityName: "EntryAbility"
+        }
+        let bizParams = new Map<string, string>()
+        let url = encodeURIComponent(code ?? "");
+        bizParams.set("url", url);
+        let params = new AFServiceParams(bizParams, false, true, '', backWant, (response: AFAuthServiceResponse) => {
+          //授权返回值
+          console.info('========= response=' + JSON.stringify(response));
+          result.success(JSON.stringify(response));
+        })
+        AFServiceCenter.call(AFService.AFServiceAuth, params)
+      }
+
     } else if (call.method == "aliPay") {
       if (call.args instanceof Map) {
         // 作为一个Map，我们可以使用get方法来获取"info"键的值

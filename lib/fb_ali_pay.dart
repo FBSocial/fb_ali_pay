@@ -17,7 +17,7 @@ class FbAliPay {
     return isInstalled;
   }
 
-  ///向支付宝请求授权
+  ///向支付宝请求授权(鸿蒙系统需要在module.json中添加"querySchemes": ["apmqpdispatch"])
   static Future<String?> aliPayAuth(String serviceCode) async {
     final String? code =
         await _channel.invokeMethod("aliPayAuth", <String, String>{
