@@ -10,7 +10,8 @@ import 'package:flutter/services.dart';
 class FbAliPay {
   static const MethodChannel _channel = const MethodChannel('fb_ali_pay');
 
-  ///是否安装支付宝
+  ///是否安装支付宝(鸿蒙系统需要在module.json中添加"querySchemes": ["alipays"])
+
   static Future<bool?> isInstalledAliPay() async {
      bool? isInstalled = await _channel.invokeMethod("isInstalledAliPay");
     return isInstalled;

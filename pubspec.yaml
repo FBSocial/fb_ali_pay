@@ -30,6 +30,9 @@ flutter:
       android:
         package: com.example.fb_ali_pay
         pluginClass: FbAliPayPlugin
+      ohos:
+        package: com.example.fb_ali_pay
+        pluginClass: FbAliPayPlugin
       ios:
         pluginClass: FbAliPayPlugin
 
