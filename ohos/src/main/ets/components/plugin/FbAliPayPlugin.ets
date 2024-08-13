@@ -18,6 +18,7 @@ import {
   AFService,
   AFAuthResCode
 } from '@alipay/afservicesdk';
+import { JSON } from '@kit.ArkTS';
 
 /** FbAliPayPlugin **/
 export default class FbAliPayPlugin implements FlutterPlugin, MethodCallHandler {
@@ -41,6 +42,7 @@ export default class FbAliPayPlugin implements FlutterPlugin, MethodCallHandler 
     }
   }
 
+
   onMethodCall(call: MethodCall, result: MethodResult): void {
     if (call.method == "isInstalledAliPay") {
       try {
@@ -55,17 +57,27 @@ export default class FbAliPayPlugin implements FlutterPlugin, MethodCallHandler 
         // 作为一个Map，我们可以使用get方法来获取"info"键的值
         let code: string | undefined = call.args.get('info');
         let backWant: AFWantParams = {
-          bundleName: "com.idreamsky.buff", //接入方应用包名
+          bundleName: "com.idreamsky.fanbook", //接入方应用包名
           moduleName: "entry",
           abilityName: "EntryAbility"
         }
         let bizParams = new Map<string, string>()
-        let url = encodeURIComponent(code ?? "");
+
+        let url = encodeURIComponent("https://authweb.alipay.com/auth?auth_type=PURE_OAUTH_SDK&scope=auth_user&state=init&" + code);
         bizParams.set("url", url);
-        let params = new AFServiceParams(bizParams, false, true, '', backWant, (response: AFAuthServiceResponse) => {
+        let params = new AFServiceParams(bizParams, false, true, 'scheme:fanbook', backWant, (response: AFAuthServiceResponse) => {
           //授权返回值
-          console.info('========= response=' + JSON.stringify(response));
-          result.success(JSON.stringify(response));
+          if (response.responseCode == AFAuthResCode.AFAuthResSuccess) {
+            if (response.result != null) {
+              let jsonStr = JSON.stringify(response);
+              let jsonObject: Response = JSON.parse(jsonStr) as Response;
+              let code = jsonObject.result.parameters.auth_code;
+              result.success(code);
+            }
+            result.error("404","授权失败" + JSON.stringify(response),"");
+          } else {
+            result.error("404","授权失败" + JSON.stringify(response),"");
+          }
         })
         AFServiceCenter.call(AFService.AFServiceAuth, params)
       }
@@ -98,3 +110,27 @@ export default class FbAliPayPlugin implements FlutterPlugin, MethodCallHandler 
     }
   }
 }
+
+interface ResultParameters {
+  app_id: string;
+  auth_code: string;
+  moduleName: string;
+  result_code: string;
+  scope: string;
+  state: string;
+}
+
+interface Result {
+  event: string;
+  bundleName: string;
+  code: number;
+  data: string;
+  parameters: ResultParameters;
+}
+
+interface Response {
+  responseCode: number;
+  session: string;
+  result: Result;
+}
+
